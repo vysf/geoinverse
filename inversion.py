@@ -1,15 +1,12 @@
-from typing import Callable
+from typing import Callable, Union
 
 from copy import deepcopy
 import numpy as np
 
 class LocalApproach:
-  # def __init__(self) -> None:
-  #   pass
-
-  def fit(self, func: Callable, params: list[list], h_list: list, method : str = "lm", damping : float = 0.01, err_min : float = 0.01, iter_max : str = 100) -> tuple:
+  def __init__(self, func: Callable, params: list[list]) -> None:
     """
-    main function in this class
+    initiate your data
 
     Parameters
     ----------
@@ -17,9 +14,30 @@ class LocalApproach:
             fungsi forward modeling
     params : list
             parameter model
-    h_list : list or a float
-            delta h untuk central finite different
-            menyesuaikan banyaknya parameter model
+
+    Returns
+    -------
+    None
+    """
+    if not callable(func):
+      raise ValueError("func harus sebuag fungsi")
+    
+    if not isinstance(params, list):
+      raise ValueError("params buat list dong")
+    
+    for param in params:
+      if not isinstance(param, list):
+        raise ValueError(" parameter model harus lah list")
+      
+    self.__func = func
+    self.__params = params
+
+  def fit(self, method : str = "lm", damping : float = 0.01, err_min : float = 0.01, iter_max : str = 100, h_list: Union[list, float, int] = 0.01) -> tuple:
+    """
+    main function in this class
+
+    Parameters
+    ----------
     method : str
             metode inversi yang digunakan seperti \n
             1. Levemberg-Marquat ('lm')
@@ -33,29 +51,15 @@ class LocalApproach:
             minimum error inversi
     iter_max : int
             maksimum iterasi inversi
+    h_list : list or a float
+            delta h untuk central finite different
+            menyesuaikan banyaknya parameter model
 
     Returns
     -------
     tuple
         tuple yang berisi beberapa (n parameter) list parameter hasil akhir inversi
     """
-    if not callable(func):
-      raise ValueError("func harus sebuag fungsi")
-    
-    if not isinstance(params, list):
-      raise ValueError("params buat list dong")
-    
-    for param in params:
-      if not isinstance(param, list):
-        raise ValueError(" parameter model harus lah list")
-    
-    if not isinstance(h_list, list):
-      raise ValueError("h_list harus list")
-    
-
-    for hs in h_list:
-      if not isinstance(hs, (float, int)):
-        raise ValueError("h harus angka")
     
     methods = ['lm', 'gs', 'gr', 'qn', 'svd']
     if method not in methods:
@@ -69,9 +73,16 @@ class LocalApproach:
     
     if not isinstance(iter_max, int):
       raise ValueError("iterasi harus angka")
+    
+    if isinstance(h_list, (float, int)):
+      h_list = [h_list for h in range(len(self.__params))]
 
-    self.__func = func
-    self.__params = [param for param in params]
+    if not isinstance(h_list, list):
+      raise ValueError("h_list harus list")
+    
+    for hs in h_list:
+      if not isinstance(hs, (float, int)):
+        raise ValueError("h harus angka")
 
     return self.__inversion(method, err_min, iter_max)
 
@@ -131,10 +142,11 @@ class LocalApproach:
     return J
   
 if __name__ == "__main__":
-  lc = LocalApproach()
   def f(*args):
     for arg in args:
       print(arg)
     return 1
   # lc.fit(f,[[1]],['t'], method='l')
-  # f([[1,2], [3,4]])
+  params = [[1,2], [3,4]]
+  lc = LocalApproach(f, params)
+  f(*params)
