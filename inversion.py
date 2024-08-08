@@ -1,10 +1,11 @@
 import numpy as np
+from numpy.linalg import inv
 from copy import deepcopy
 from typing import Callable, Union
 
 class LocalApproach:
 
-	def __init__(self, func: Callable, params: list[list]) -> None:
+	def __init__(self, func: Callable, obs_data: list, params: list[list]) -> None:
 		"""
 		initiate your data
 
@@ -12,6 +13,8 @@ class LocalApproach:
 		----------
 		func  : None
 				fungsi forward modeling
+		obs_data : list
+				data observasi
 		params : list
 				parameter model
 
@@ -22,6 +25,9 @@ class LocalApproach:
 		if not callable(func):
 			raise ValueError("func harus sebuag fungsi")
 
+		if not isinstance(obs_data, list):
+			raise ValueError("obs_data buat list dong")
+		
 		if not isinstance(params, list):
 			raise ValueError("params buat list dong")
 
@@ -30,6 +36,7 @@ class LocalApproach:
 				raise ValueError(" parameter model harus lah list")
 
 		self.__func = func
+		self.__d_obs = obs_data
 		self.__params = params
 
 
@@ -88,13 +95,40 @@ class LocalApproach:
 
 
 	def __inversion(self, method, err_min, iter_max):
-		params = self.__params
+		d_obs = self.__d_obs
+		old_params = self.__params
+		rmse = np.inf
+		iteration = 0
+		while True:
+			iteration += 1
+
+			d_cal = self.__func(*old_params)
+			delta_d = (d_cal - d_obs).reshape(-1, 1)
+
+			rmse = self.__rmse(delta_d)
+
+			if iteration == iter_max or rmse <= err_min:
+				break
+
+			J = self.__jacobian()
+
+			if method == "lm":
+				new_params = self.__lm(delta_d, J)
+			
+			old_params = old_params + new_params
+
+		return old_params
+	
+	def __lm(self, delta_d, J):
+		I = np.identity(len(self.__params))
+		epsilon = 0.01
+		params = inv(J.T @ J + epsilon**2 * I) @ J.T @ delta_d
 		return params
+	
 
-
-	@property
-	def J(self):
-		return self.__jacobian()
+	def __rmse(self, delta_d):
+		rmse = np.sqrt(np.sum(delta_d) ** 2 / len(delta_d))
+		return rmse
 
 
 	def __jacobian(self, func1, *args, h_list):
