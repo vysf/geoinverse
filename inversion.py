@@ -91,6 +91,10 @@ class LocalApproach:
 			if not isinstance(hs, (float, int)):
 				raise ValueError("h harus angka")
 
+		
+		self.__damping = damping
+		self.__h_list = h_list 
+
 		return self.__inversion(method, err_min, iter_max)
 
 
@@ -121,8 +125,7 @@ class LocalApproach:
 	
 	def __lm(self, delta_d, J):
 		I = np.identity(len(self.__params))
-		epsilon = 0.01
-		params = inv(J.T @ J + epsilon**2 * I) @ J.T @ delta_d
+		params = inv(J.T @ J + self.__damping**2 * I) @ J.T @ delta_d
 		return params
 	
 
@@ -131,7 +134,7 @@ class LocalApproach:
 		return rmse
 
 
-	def __jacobian(self, func1, *args, h_list):
+	def __jacobian(self):
 		"""
 		Menghitung matriks Jacobian dengan memilih metode perhitungan.
 		Menghitung beda hingga tengah untuk fungsi dengan parameter dinamis.
@@ -143,37 +146,34 @@ class LocalApproach:
 		Returns:
 		tuple of numpy arrays: Hasil perhitungan beda hingga untuk fungsi pada daftar nilai parameter.
 		"""
-		num_params = len(args)
-		if num_params != len(h_list):
+		num_params = len(self.__params)
+		if num_params != len(self.__h_list):
 			raise ValueError("Jumlah parameter input dan langkah kecil harus sama.")
 
 		# Mengonversi setiap daftar nilai menjadi numpy array
-		arrays = [np.array(param) for param in args]
+		arrays = [np.array(param) for param in self.__params]
 
 		# Mengecek panjang setiap array
 		array_lengths = [len(arr) for arr in arrays]
 		if not all(length == array_lengths[0] for length in array_lengths):
 			raise ValueError("Semua parameter input harus memiliki panjang yang sama.")
 
-		# Menghitung fungsi pada titik-titik awal
-		y_initial = np.array([func1(*params) for params in zip(*arrays)])
-
 		# Inisialisasi matriks Jacobian
-		J = np.zeros((len(y_initial), num_params))
+		J = np.zeros((len(self.__d_obs), num_params))
 
 		for i in range(len(arrays)):
 			# Forward modification
 			modified_arrays_forward = [deepcopy(arr) for arr in arrays]
-			modified_arrays_forward[i] += h_list[i]
-			y_forward = np.array([func1(*params) for params in zip(*modified_arrays_forward)])
+			modified_arrays_forward[i] += self.__h_list[i]
+			y_forward = np.array([self.__func(*params) for params in zip(*modified_arrays_forward)])
 
 			# Backward modification
 			modified_arrays_backward = [deepcopy(arr) for arr in arrays]
-			modified_arrays_backward[i] -= h_list[i]
-			y_backward = np.array([func1(*params) for params in zip(*modified_arrays_backward)])
+			modified_arrays_backward[i] -= self.__h_list[i]
+			y_backward = np.array([self.__func(*params) for params in zip(*modified_arrays_backward)])
 
 			# Central difference
-			J[:, i] = (y_forward - y_backward) / (2 * h_list[i])
+			J[:, i] = (y_forward - y_backward) / (2 * self.__h_list[i])
 			
 		return J
   
