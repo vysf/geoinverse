@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.linalg import inv
 from copy import deepcopy
-from typing import Callable, Union
+from typing import Callable, Union, List
 
 class LocalApproach:
 
@@ -22,6 +22,13 @@ class LocalApproach:
 		-------
 		None
 		"""
+		self._check_inputs(func, obs_data, params)
+
+		self.__func = func
+		self.__d_obs = np.array(obs_data, dtype=float)
+		self.__params = np.array(params, dtype=float)
+
+	def _check_inputs(self, func, obs_data, params):
 		if not callable(func):
 			raise ValueError("func harus sebuag fungsi")
 
@@ -34,13 +41,25 @@ class LocalApproach:
 		for param in params:
 			if not isinstance(param, list):
 				raise ValueError(" parameter model harus lah list")
+			
+	def _validate_fit_inputs(self, method: str, damping: float, err_min: float, iter_max: int, h_list: Union[List[float], float]):
+		methods = ['lm', 'gs', 'gr', 'qn', 'svd']
+		if method not in methods:
+				raise ValueError(f"method must be one of {methods}")
+		
+		if not isinstance(damping, (float, int)):
+				raise ValueError("damping must be a number")
+		
+		if not isinstance(err_min, (float, int)):
+				raise ValueError("err_min must be a number")
+		
+		if not isinstance(iter_max, int):
+				raise ValueError("iter_max must be an integer")
+		
+		if not isinstance(h_list, (list, float, int)):
+				raise ValueError("h_list must be a list or a number")
 
-		self.__func = func
-		self.__d_obs = obs_data
-		self.__params = params
-
-
-	def fit(self, method : str = "lm", damping : float = 0.01, err_min : float = 0.01, iter_max : str = 100, h_list: Union[list, float, int] = 0.01) -> tuple:
+	def fit(self, method: str = "lm", damping: float = 0.01, err_min: float = 0.01, iter_max: int = 100, h_list: Union[List[float], float] = 0.01) -> List[float]:
 		"""
 		main function in this class
 
@@ -68,70 +87,46 @@ class LocalApproach:
 		tuple
 			tuple yang berisi beberapa (n parameter) list parameter hasil akhir inversi
 		"""
-		methods = ['lm', 'gs', 'gr', 'qn', 'svd']
-		if method not in methods:
-			raise ValueError(f"method harus salah satu dari {methods}")
-
-		if not isinstance(damping, (float, int)):
-			raise ValueError("damping harus angka")
-
-		if not isinstance(err_min, (float, int)):
-			raise ValueError("error harus angka")
-
-		if not isinstance(iter_max, int):
-			raise ValueError("iterasi harus angka")
-
-		if isinstance(h_list, (float, int)):
-			h_list = [h_list for h in range(len(self.__params))]
-
-		if not isinstance(h_list, list):
-			raise ValueError("h_list harus list")
-
-		for hs in h_list:
-			if not isinstance(hs, (float, int)):
-				raise ValueError("h harus angka")
-
+		
+		self._validate_fit_inputs(method, damping, err_min, iter_max, h_list)
 		
 		self.__damping = damping
-		self.__h_list = h_list 
+		self.__h_list = np.array(h_list if isinstance(h_list, list) else [h_list] * len(self.__params))
 
 		return self.__inversion(method, err_min, iter_max)
 
 
-	def __inversion(self, method, err_min, iter_max):
-		d_obs = self.__d_obs
+	def __inversion(self, method: str, err_min: float, iter_max: int) -> List[float]:
 		old_params = self.__params
 		rmse = np.inf
 		iteration = 0
-		while True:
+		while iteration < iter_max and rmse > err_min:
 			iteration += 1
-
 			d_cal = self.__func(*old_params)
-			delta_d = (d_cal - d_obs).reshape(-1, 1)
-
+			# d_cal = self.__func(*old_params.T)
+			delta_d = (d_cal - self.__d_obs).reshape(-1, 1)
 			rmse = self.__rmse(delta_d)
-
-			if iteration == iter_max or rmse <= err_min:
-				break
-
 			J = self.__jacobian()
 
-			if method == "lm":
-				new_params = self.__lm(delta_d, J)
-			
-			old_params = old_params + new_params
+			# if method == "lm":
+			# 	new_params = self.__lm(delta_d, J)
 
+			new_params = self.__update_params(method, delta_d, J)
+			old_params = old_params + new_params
 		return old_params
 	
-	def __lm(self, delta_d, J):
+	def __update_params(self, method: str, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
+		if method == "lm":
+				return self.__lm(delta_d, J)
+		raise ValueError(f"Unknown method: {method}")
+	
+	def __lm(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
 		I = np.identity(len(self.__params))
-		params = inv(J.T @ J + self.__damping**2 * I) @ J.T @ delta_d
-		return params
+		return inv(J.T @ J + self.__damping**2 * I) @ J.T @ delta_d
 	
 
-	def __rmse(self, delta_d):
-		rmse = np.sqrt(np.sum(delta_d) ** 2 / len(delta_d))
-		return rmse
+	def __rmse(self, delta_d: np.ndarray) -> float:
+		return np.sqrt(np.sum(delta_d ** 2) / len(delta_d))
 
 
 	def __jacobian(self):
@@ -150,25 +145,25 @@ class LocalApproach:
 		if num_params != len(self.__h_list):
 			raise ValueError("Jumlah parameter input dan langkah kecil harus sama.")
 
-		# Mengonversi setiap daftar nilai menjadi numpy array
-		arrays = [np.array(param) for param in self.__params]
+		# # Mengonversi setiap daftar nilai menjadi numpy array
+		# arrays = [np.array(param) for param in self.__params]
 
-		# Mengecek panjang setiap array
-		array_lengths = [len(arr) for arr in arrays]
-		if not all(length == array_lengths[0] for length in array_lengths):
-			raise ValueError("Semua parameter input harus memiliki panjang yang sama.")
+		# # Mengecek panjang setiap array
+		# array_lengths = [len(arr) for arr in arrays]
+		# if not all(length == array_lengths[0] for length in array_lengths):
+		# 	raise ValueError("Semua parameter input harus memiliki panjang yang sama.")
 
 		# Inisialisasi matriks Jacobian
 		J = np.zeros((len(self.__d_obs), num_params))
 
-		for i in range(len(arrays)):
+		for i in range(num_params):
 			# Forward modification
-			modified_arrays_forward = [deepcopy(arr) for arr in arrays]
+			modified_arrays_forward = [deepcopy(arr) for arr in self.__params]
 			modified_arrays_forward[i] += self.__h_list[i]
 			y_forward = np.array([self.__func(*params) for params in zip(*modified_arrays_forward)])
 
 			# Backward modification
-			modified_arrays_backward = [deepcopy(arr) for arr in arrays]
+			modified_arrays_backward = [deepcopy(arr) for arr in self.__params]
 			modified_arrays_backward[i] -= self.__h_list[i]
 			y_backward = np.array([self.__func(*params) for params in zip(*modified_arrays_backward)])
 
@@ -177,13 +172,3 @@ class LocalApproach:
 			
 		return J
   
-
-# if __name__ == "__main__":
-#   def f(*args):
-#     for arg in args:
-#       print(arg)
-#     return 1
-#   # lc.fit(f,[[1]],['t'], method='l')
-#   params = [[1,2], [3,4]]
-#   lc = LocalApproach(f, params)
-#   f(*params)
