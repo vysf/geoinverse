@@ -30,17 +30,17 @@ class LocalApproach:
 
 	def _check_inputs(self, func, obs_data, params):
 		if not callable(func):
-			raise ValueError("func harus sebuag fungsi")
+			raise ValueError("func must be a callable function")
 
 		if not isinstance(obs_data, list):
-			raise ValueError("obs_data buat list dong")
+			raise ValueError("obs_data must be a list")
 		
 		if not isinstance(params, list):
-			raise ValueError("params buat list dong")
+			raise ValueError("params must be a list")
 
 		for param in params:
 			if not isinstance(param, list):
-				raise ValueError(" parameter model harus lah list")
+				raise ValueError("Each parameter in params must be a list")
 			
 	def _validate_fit_inputs(self, method: str, damping: float, err_min: float, iter_max: int, h_list: Union[List[float], float]):
 		methods = ['lm', 'gs', 'gr', 'qn', 'svd']

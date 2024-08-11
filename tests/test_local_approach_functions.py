@@ -22,21 +22,96 @@ class TestLocalApproachFunctions(unittest.TestCase):
   
   def test_initialization_invalid_func(self):
     # test inisialisasi dengan func yang tidak callacle
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as context:
       LocalApproach(None, [1, 2, 3], [[1, 2, 3], [1, 2, 3]])
+
+    self.assertEqual(str(context.exception), "func must be a callable function")
   
 
   def test_initialization_invalid_obs_data(self):
     # test inisialisasi dengan obs_data yang bukan list
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, "invalid_data_type", [[1, 2, 3], [1, 2, 3]])
+
+    self.assertEqual(str(context.exception), "obs_data must be a list")
   
 
   def test_initialization_invalid_params(self):
     # test inisialisasi dengan params yang bukan list of lists
-    with self.assertRaises(ValueError):
+    with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, [1, 2, 3], "invalid_params_type")
+
+    self.assertEqual(str(context.exception), "params must be a list")
+
+
+  def test_initialization_invalid_each_param(self):
+    # test inisialisasi dengan setiap param yang bukan list
+    with self.assertRaises(ValueError) as context:
+      LocalApproach(self.func, [1, 2, 3], [1, 2, 3])
+
+    self.assertEqual(str(context.exception), "Each parameter in params must be a list")
   
+
+  def test_fit_inputs_invalid_methods(self):
+    #  test methods yang tidak ada di ['lm', 'gs', 'gr', 'qn', 'svd']
+    # Arrange
+    method = "test"
+    methods = ['lm', 'gs', 'gr', 'qn', 'svd']
+
+    # Act Assert
+    with self.assertRaises(ValueError) as context:
+      self.local_approach.fit(method=method)
+
+    self.assertEqual(str(context.exception), f"method must be one of {methods}")
+
+
+  def test_fit_inputs_invalid_damping(self):
+    #  test tipe data damping
+    # Arrange
+    damping = "test"
+
+    # Act Assert
+    with self.assertRaises(ValueError) as context:
+      self.local_approach.fit(damping=damping)
+
+    self.assertEqual(str(context.exception), "damping must be a number")
+
+
+  def test_fit_inputs_invalid_err_min(self):
+    # test tipe data err_min
+    # Arrange
+    err_min = "test"
+
+    # Act & Assert
+    with self.assertRaises(ValueError) as context:
+      self.local_approach.fit(err_min=err_min)
+      
+    self.assertEqual(str(context.exception), "err_min must be a number")
+
+  
+  def test_fit_inputs_invalid_iter_max(self):
+    # test tipe data iter_max
+    # Arrange
+    iter_max = "test"
+
+    # Act & Assert
+    with self.assertRaises(ValueError) as context:
+      self.local_approach.fit(iter_max=iter_max)
+      
+    self.assertEqual(str(context.exception), "iter_max must be an integer")
+
+
+  def test_fit_inputs_invalid_h_list(self):
+    # test tipe data h_list
+    # Arrange
+    h_list = "test"
+
+    # Act & Assert
+    with self.assertRaises(ValueError) as context:
+      self.local_approach.fit(h_list=h_list)
+      
+    self.assertEqual(str(context.exception), "h_list must be a list or a number")
+
 
   def test_fit(self):
     # test method fite
@@ -103,4 +178,4 @@ class TestLocalApproachFunctions(unittest.TestCase):
   
 
 if __name__ == '__main__':
-  unittest.main()
+  unittest.main() # pragma: no cover
