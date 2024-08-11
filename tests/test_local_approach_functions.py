@@ -49,7 +49,15 @@ class TestLocalApproachFunctions(unittest.TestCase):
     with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, [1, 2, 3], [1, 2, 3])
 
-    self.assertEqual(str(context.exception), "Each parameter in params must be a list")
+    self.assertEqual(str(context.exception), "params must be a list of lists")
+  
+  
+  def test_initialization_invalid_each_param_length(self):
+    # test inisialisasi dengan setiap param yang bukan list
+    with self.assertRaises(ValueError) as context:
+      LocalApproach(self.func, [1, 2, 3], [[1], [2, 1], [3, 0, 9]])
+
+    self.assertEqual(str(context.exception), "Each parameter in params must be a list of the same length")
   
 
   def test_fit_inputs_invalid_methods(self):
@@ -101,7 +109,19 @@ class TestLocalApproachFunctions(unittest.TestCase):
     self.assertEqual(str(context.exception), "iter_max must be an integer")
 
 
-  def test_fit_inputs_invalid_h_list(self):
+  def test_fit_inputs_invalid_h_list_numbers(self):
+    # test tipe data h_list
+    # Arrange
+    h_list = ["test"]
+
+    # Act & Assert
+    with self.assertRaises(ValueError) as context:
+      self.local_approach.fit(h_list=h_list)
+      
+    self.assertEqual(str(context.exception), "All elements in h_list must be numbers")
+
+
+  def test_fit_inputs_invalid_h_list_number(self):
     # test tipe data h_list
     # Arrange
     h_list = "test"
@@ -110,7 +130,7 @@ class TestLocalApproachFunctions(unittest.TestCase):
     with self.assertRaises(ValueError) as context:
       self.local_approach.fit(h_list=h_list)
       
-    self.assertEqual(str(context.exception), "h_list must be a list or a number")
+    self.assertEqual(str(context.exception), "h_list must be a list of numbers or a single number")
 
 
   def test_fit(self):
@@ -169,7 +189,6 @@ class TestLocalApproachFunctions(unittest.TestCase):
       self.assertAlmostEqual(rmse, expected_rmse, places=5)
 
 
-  # still wrong
   def test_jacobian_length_mismatch(self):
       # Test pengecualian untuk length mismatch di __jacobian
       self.local_approach._LocalApproach__h_list = np.array([0.1])  # Mengubah h_list agar tidak sesuai
