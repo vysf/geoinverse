@@ -4,6 +4,11 @@ from GeoInvers import LocalApproach
 
 class TestLocalApproachFunctions(unittest.TestCase):
   def setUp(self):
+    """
+    Set up the test environment.
+    This method is called before each test case.
+    Initializes a sample function, observation data, and parameters for testing.
+    """
     self.func = lambda x, y, z: (x + y) / z
     m1 = [1, 2, 3, 4]
     m2 = [1, 2, 3, 4]
@@ -15,13 +20,19 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
   
   def test_initialization_valid(self):
-    # test inisialisasi dengan input valid
+    """
+    Test the initialization of LocalApproach with valid inputs.
+    Ensures that an instance of LocalApproach is created successfully when given valid parameters.
+    """
     la = LocalApproach(self.func, [1, 2, 3], [[1, 2, 3], [1, 2, 3]])
     self.assertIsInstance(la, LocalApproach)
   
   
   def test_initialization_invalid_func(self):
-    # test inisialisasi dengan func yang tidak callacle
+    """
+    Test initialization with an invalid function parameter.
+    Ensures that a ValueError is raised if the function is not callable.
+    """
     with self.assertRaises(ValueError) as context:
       LocalApproach(None, [1, 2, 3], [[1, 2, 3], [1, 2, 3]])
 
@@ -29,7 +40,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
   
 
   def test_initialization_invalid_obs_data(self):
-    # test inisialisasi dengan obs_data yang bukan list
+    """
+    Test initialization with invalid observation data.
+    Ensures that a ValueError is raised if the observation data is not a list.
+    """
     with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, "invalid_data_type", [[1, 2, 3], [1, 2, 3]])
 
@@ -37,7 +51,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
   
 
   def test_initialization_invalid_params(self):
-    # test inisialisasi dengan params yang bukan list of lists
+    """
+    Test initialization with invalid parameter data.
+    Ensures that a ValueError is raised if the parameters are not a list of lists.
+    """
     with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, [1, 2, 3], "invalid_params_type")
 
@@ -45,7 +62,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_initialization_invalid_each_param(self):
-    # test inisialisasi dengan setiap param yang bukan list
+    """
+    Test initialization with parameters where each parameter is not a list.
+    Ensures that a ValueError is raised if any element of params is not a list.
+    """
     with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, [1, 2, 3], [1, 2, 3])
 
@@ -53,7 +73,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
   
   
   def test_initialization_invalid_each_param_length(self):
-    # test inisialisasi dengan setiap param yang bukan list
+    """
+    Test initialization with parameters of different lengths.
+    Ensures that a ValueError is raised if the length of each parameter list in params is not the same.
+    """
     with self.assertRaises(ValueError) as context:
       LocalApproach(self.func, [1, 2, 3], [[1], [2, 1], [3, 0, 9]])
 
@@ -61,7 +84,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
   
 
   def test_fit_inputs_invalid_methods(self):
-    #  test methods yang tidak ada di ['lm', 'gs', 'gr', 'qn', 'svd']
+    """
+    Test the fit method with an invalid inversion method.
+    Ensures that a ValueError is raised if the method is not one of the allowed methods.
+    """
     # Arrange
     method = "test"
     methods = ['lm', 'gs', 'gr', 'qn', 'svd']
@@ -74,7 +100,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_fit_inputs_invalid_damping(self):
-    #  test tipe data damping
+    """
+    Test the fit method with an invalid damping parameter.
+    Ensures that a ValueError is raised if damping is not a number.
+    """
     # Arrange
     damping = "test"
 
@@ -86,7 +115,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_fit_inputs_invalid_err_min(self):
-    # test tipe data err_min
+    """
+    Test the fit method with an invalid err_min parameter.
+    Ensures that a ValueError is raised if err_min is not a number.
+    """
     # Arrange
     err_min = "test"
 
@@ -98,7 +130,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
   
   def test_fit_inputs_invalid_iter_max(self):
-    # test tipe data iter_max
+    """
+    Test the fit method with an invalid iter_max parameter.
+    Ensures that a ValueError is raised if iter_max is not an integer.
+    """
     # Arrange
     iter_max = "test"
 
@@ -110,7 +145,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_fit_inputs_invalid_h_list_numbers(self):
-    # test tipe data h_list
+    """
+    Test the fit method with an invalid h_list containing non-numeric values.
+    Ensures that a ValueError is raised if any element in h_list is not a number.
+    """
     # Arrange
     h_list = ["test"]
 
@@ -122,7 +160,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_fit_inputs_invalid_h_list_number(self):
-    # test tipe data h_list
+    """
+    Test the fit method with an invalid h_list that is neither a list nor a number.
+    Ensures that a ValueError is raised if h_list is not a list of numbers or a single number.
+    """
     # Arrange
     h_list = "test"
 
@@ -134,7 +175,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_fit(self):
-    # test method fite
+    """
+    Test the fit method to ensure it returns parameters with the correct shape.
+    Ensures that the fit method completes successfully and returns a numpy array of the expected shape.
+    """
     # Arrage
     params = np.array(self.params)
 
@@ -153,7 +197,10 @@ class TestLocalApproachFunctions(unittest.TestCase):
 
 
   def test_jacobian(self):
-    # test method __jacobian dengan mengakses menggunakan nama mangling
+    """
+    Test the __jacobian method to ensure it calculates the Jacobian matrix correctly.
+    Ensures that the Jacobian matrix computed matches the expected result.
+    """
     # Arrange
     expected_result = np.array([[1., 1., -2.38095238],
                                 [0.5, 0.5, -1.04166667],
@@ -161,7 +208,7 @@ class TestLocalApproachFunctions(unittest.TestCase):
                                 [0.25, 0.25, -0.50505051]])
 
     # Act
-    # First, ensure the fit method is called to initialize attributes properly
+    # Ensure the fit method is called to initialize attributes properly
     self.local_approach.fit(
       method="lm",
       damping=0.01,
@@ -176,24 +223,33 @@ class TestLocalApproachFunctions(unittest.TestCase):
     
 
   def test_update_params_invalid_method(self):
-      # Test pengecualian untuk metode inversion yang tidak valid
-      with self.assertRaises(ValueError):
-          self.local_approach._LocalApproach__update_params("invalid_method", np.array([1]), np.array([[1]]))
+    """
+    Test the __update_params method with an invalid inversion method.
+    Ensures that a ValueError is raised when an unrecognized method is provided.
+    """
+    with self.assertRaises(ValueError):
+        self.local_approach._LocalApproach__update_params("invalid_method", np.array([1]), np.array([[1]]))
 
 
   def test_rmse(self):
-      # Test metode __rmse
-      delta_d = np.array([1.0, 1.0, 1.0])
-      rmse = self.local_approach._LocalApproach__rmse(delta_d)
-      expected_rmse = np.sqrt(np.sum(delta_d**2) / len(delta_d))
-      self.assertAlmostEqual(rmse, expected_rmse, places=5)
+    """
+    Test the __rmse method to ensure it calculates the Root Mean Square Error correctly.
+    Ensures that the RMSE value computed matches the expected result.
+    """
+    delta_d = np.array([1.0, 1.0, 1.0])
+    rmse = self.local_approach._LocalApproach__rmse(delta_d)
+    expected_rmse = np.sqrt(np.sum(delta_d**2) / len(delta_d))
+    self.assertAlmostEqual(rmse, expected_rmse, places=5)
 
 
   def test_jacobian_length_mismatch(self):
-      # Test pengecualian untuk length mismatch di __jacobian
-      self.local_approach._LocalApproach__h_list = np.array([0.1])  # Mengubah h_list agar tidak sesuai
-      with self.assertRaises(ValueError):
-          self.local_approach._LocalApproach__jacobian()
+    """
+    Test the __jacobian method with a length mismatch in the h_list parameter.
+    Ensures that a ValueError is raised when the length of h_list does not match the number of parameters.
+    """
+    self.local_approach._LocalApproach__h_list = np.array([0.1])  # Mengubah h_list agar tidak sesuai
+    with self.assertRaises(ValueError):
+        self.local_approach._LocalApproach__jacobian()
   
 
 if __name__ == '__main__':
