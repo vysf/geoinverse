@@ -428,4 +428,16 @@ class LocalApproach:
 			J[:, i] = (y_forward - y_backward) / (2 * self.__h_list[i])
 			
 		return J
-  
+	
+	
+	def __hessian(self) -> np.ndarray:
+		"""
+		SOON
+		Compute the Hessian matrix using central finite differences.
+
+		Returns
+		-------
+		np.ndarray
+				Hessian matrix of partial derivatives.
+		"""
+		return np.identity(len(self.__params))
