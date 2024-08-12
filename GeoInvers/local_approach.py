@@ -22,7 +22,7 @@ obs_data : np.ndarray
 params : np.ndarray
     Initial model parameters for the optimization process.
 damping : float
-    Damping factor used in the Levenberg-Marquardt method.
+    Damping factor used in the Levenberg-Marquardt method and Singular Value Decomposition method
 h_list : np.ndarray
     List of step sizes for central finite difference approximation.
 
@@ -49,6 +49,18 @@ __update_params(self, method: str, delta_d: np.ndarray, J: np.ndarray) -> np.nda
 __lm(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray
     Perform the Levenberg-Marquardt optimization to update model parameters.
 
+__gn(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray
+    Perform the Gauss-Newton optimization to update model parameters.
+
+__gs(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray
+    Perform the Gradient optimization to update model parameters.
+
+__qn(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray
+    Perform the Quasi-Newton optimization to update model parameters.
+
+__svd(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray
+    Perform the Singular Value Decomposition optimization to update model parameters.
+
 __rmse(self, delta_d: np.ndarray) -> float
     Calculate the Root Mean Square Error (RMSE) between observed and calculated data.
 
@@ -57,7 +69,7 @@ __jacobian(self) -> np.ndarray
 """
 
 import numpy as np
-from numpy.linalg import inv
+from numpy.linalg import inv, svd
 from copy import deepcopy
 from typing import Callable, Union, List
 
@@ -129,7 +141,7 @@ class LocalApproach:
 		Parameters
 		----------
 		method : str
-				Optimization method to be used ('lm', 'gs', 'gr', 'qn', 'svd').
+				Optimization method to be used ('lm', 'gn', 'gs', 'qn', 'svd').
 		damping : float
 				Damping factor for the optimization method.
 		err_min : float
@@ -143,7 +155,7 @@ class LocalApproach:
 		-------
 		None
 		"""
-		methods = ['lm', 'gs', 'gr', 'qn', 'svd']
+		methods = ['lm', 'gn', 'gs', 'qn', 'svd']
 		if method not in methods:
 				raise ValueError(f"method must be one of {methods}")
 		
@@ -170,7 +182,12 @@ class LocalApproach:
 		Parameters
 		----------
 		method : str, optional
-				Optimization method to be used ('lm', 'gs', 'gr', 'qn', 'svd'). Default is 'lm'.
+				Optimization method to be used ('lm', 'gn', 'gs', 'qn', 'svd'). Default is 'lm'.
+				1. Levemberg-Marquardt Method (lm)
+				2. Gauss-Newton Method (gn)
+				3. Gradient Method (gs)
+				4. Quasi-Newton Method (qn)
+				5. Singular Value Decomposition Method (svd)
 		damping : float, optional
 				Damping factor for the optimization method. Default is 0.01.
 		err_min : float, optional
@@ -199,7 +216,7 @@ class LocalApproach:
 		Parameters
 		----------
 		method : str
-				Optimization method to be used ('lm', 'gs', 'gr', 'qn', 'svd').
+				Optimization method to be used ('lm', 'gn', 'gs', 'qn', 'svd').
 		err_min : float
 				Minimum acceptable error for convergence.
 		iter_max : int
@@ -210,18 +227,18 @@ class LocalApproach:
 		List[float]
 				Optimized model parameters.
 		"""
-		old_params = self.__params
+		m = self.__params
 		rmse = np.inf
 		iteration = 0
 		while iteration < iter_max and rmse > err_min:
 			iteration += 1
-			d_cal = self.__func(*old_params)
+			d_cal = self.__func(*m)
 			delta_d = (d_cal - self.__d_obs).reshape(-1, 1)
 			rmse = self.__rmse(delta_d)
 			J = self.__jacobian()
-			new_params = self.__update_params(method, delta_d, J)
-			old_params = old_params + new_params
-		return old_params
+			delta_m = self.__update_params(method, delta_d, J)
+			m = m + delta_m
+		return m
 	
 
 	def __update_params(self, method: str, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
@@ -231,7 +248,7 @@ class LocalApproach:
 		Parameters
 		----------
 		method : str
-				Optimization method to be used ('lm', 'gs', 'gr', 'qn', 'svd').
+				Optimization method to be used ('lm', 'gn', 'gs', 'qn', 'svd').
 		delta_d : np.ndarray
 				Difference between calculated and observed data.
 		J : np.ndarray
@@ -244,6 +261,14 @@ class LocalApproach:
 		"""
 		if method == "lm":
 				return self.__lm(delta_d, J)
+		elif method == "gn":
+				return self.__gn(delta_d, J)
+		elif method == "gs":
+			return self.__gs(delta_d, J)
+		elif method == "qn":
+			return self.__qn(delta_d, J)
+		elif method == "svd":
+			return self.__svd(delta_d, J)
 		raise ValueError(f"Unknown method: {method}")
 	
 
@@ -265,6 +290,86 @@ class LocalApproach:
 		"""
 		I = np.identity(len(self.__params))
 		return inv(J.T @ J + self.__damping**2 * I) @ J.T @ delta_d
+	
+
+	def __qn(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
+		"""
+		Perform the QUasi-Newton optimization to update model parameters.
+
+		Parameters
+		----------
+		delta_d : np.ndarray
+				Difference between calculated and observed data.
+		J : np.ndarray
+				Jacobian matrix.
+
+		Returns
+		-------
+		np.ndarray
+				Updated model parameters.
+		"""
+		H = np.identity(len(self.__params))
+		return -inv(J.T @ J + H.T @ delta_d) @ J.T @ delta_d
+	
+
+	def __gn(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
+		"""
+		Perform the Gauss-Newton optimization to update model parameters.
+
+		Parameters
+		----------
+		delta_d : np.ndarray
+				Difference between calculated and observed data.
+		J : np.ndarray
+				Jacobian matrix.
+
+		Returns
+		-------
+		np.ndarray
+				Updated model parameters.
+		"""
+		return -inv(J.T @ J) @ J.T @ delta_d
+	
+
+	def __gs(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
+		"""
+		Perform the Gradient optimization to update model parameters.
+
+		Parameters
+		----------
+		delta_d : np.ndarray
+				Difference between calculated and observed data.
+		J : np.ndarray
+				Jacobian matrix.
+
+		Returns
+		-------
+		np.ndarray
+				Updated model parameters.
+		"""
+		k = 0.01
+		return -2 * k * (J.T @ delta_d)
+	
+
+	def __svd(self, delta_d: np.ndarray, J: np.ndarray) -> np.ndarray:
+		"""
+		Perform the Singular Value Decomposition optimization to update model parameters.
+
+		Parameters
+		----------
+		delta_d : np.ndarray
+				Difference between calculated and observed data.
+		J : np.ndarray
+				Jacobian matrix.
+
+		Returns
+		-------
+		np.ndarray
+				Updated model parameters.
+		"""
+		U, S, Vh = svd(J, full_matrices=False)
+		SS = S / (S + self.__damping)
+		return Vh.T @ np.diag(SS) @ U.T @ delta_d
 	
 
 	def __rmse(self, delta_d: np.ndarray) -> float:
