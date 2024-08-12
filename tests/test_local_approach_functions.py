@@ -90,7 +90,7 @@ class TestLocalApproachFunctions(unittest.TestCase):
     """
     # Arrange
     method = "test"
-    methods = ['lm', 'gs', 'gr', 'qn', 'svd']
+    methods = ['lm', 'gn', 'gs', 'qn', 'svd']
 
     # Act Assert
     with self.assertRaises(ValueError) as context:
