@@ -51,4 +51,4 @@ dev = [
 ]
 
 [project.urls]
-Source = "https://github.com/vysf/geophysical-inversion-methods"
+Source = "https://github.com/vysf/geoinvers"
