@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from GeoInvers import LocalApproach
+from geoinvers import LocalApproach
 
 class TestLocalApproachFunctions(unittest.TestCase):
   def setUp(self):
@@ -16,7 +16,19 @@ class TestLocalApproachFunctions(unittest.TestCase):
     self.params = [m1, m2, m3]
     self.obs_data = [self.func(*param) for param in zip(*self.params)]
     self.deltas = [0.1, 0.2, 0.4]
+    self.delta_d = np.array([1.0, 1.0, 1.0, 1.0])
+    self.J = np.array([[1., 1., -2.38095238],
+                      [0.5, 0.5, -1.04166667],
+                      [0.33333333, 0.33333333, -0.67873303],
+                      [0.25, 0.25, -0.50505051]])
     self.local_approach = LocalApproach(self.func, self.obs_data, self.params)
+    self.fit = self.local_approach.fit(
+      method="gn",
+      damping=0.01,
+      err_min=0.01,
+      iter_max=1,
+      h_list=self.deltas
+    )
 
   
   def test_initialization_valid(self):
@@ -183,13 +195,8 @@ class TestLocalApproachFunctions(unittest.TestCase):
     params = np.array(self.params)
 
     # Act
-    result = self.local_approach.fit(
-      method="lm",
-      damping=0.01,
-      err_min=0.01,
-      iter_max=1,
-      h_list=[0.1, 0.2, 0.4]
-    )
+    result = self.fit
+    print(result)
 
     # Assert
     self.assertIsInstance(result, np.ndarray)
@@ -202,21 +209,11 @@ class TestLocalApproachFunctions(unittest.TestCase):
     Ensures that the Jacobian matrix computed matches the expected result.
     """
     # Arrange
-    expected_result = np.array([[1., 1., -2.38095238],
-                                [0.5, 0.5, -1.04166667],
-                                [0.33333333, 0.33333333, -0.67873303],
-                                [0.25, 0.25, -0.50505051]])
+    expected_result = self.J
 
     # Act
     # Ensure the fit method is called to initialize attributes properly
-    self.local_approach.fit(
-      method="lm",
-      damping=0.01,
-      err_min=0.01,
-      iter_max=10,
-      h_list=[0.1, 0.2, 0.4]
-    )
-    jacobian_matrix = self.local_approach._LocalApproach__jacobian()
+    jacobian_matrix = self.local_approach._LocalApproach__jacobian(self.params)
 
     # Assert
     np.testing.assert_almost_equal(jacobian_matrix, expected_result, decimal=6)
@@ -227,8 +224,56 @@ class TestLocalApproachFunctions(unittest.TestCase):
     Test the __update_params method with an invalid inversion method.
     Ensures that a ValueError is raised when an unrecognized method is provided.
     """
-    with self.assertRaises(ValueError):
-        self.local_approach._LocalApproach__update_params("invalid_method", np.array([1]), np.array([[1]]))
+    method = "invalid_method"
+    with self.assertRaises(ValueError) as context:
+        self.local_approach._LocalApproach__update_params(method, np.array([1]), np.array([[1]]))
+
+    self.assertEqual(str(context.exception), f"Unknown method: {method}")
+
+
+  def test_method_levemberg_marquardt(self):
+    """
+    Test the __lm method
+    """
+    # Arrange
+    la = self.local_approach
+    expected_result = np.array([6.4771924, 6.4771924, 5.0269973])
+
+    # Act
+    result = la._LocalApproach__lm(self.delta_d, self.J)
+
+    # Assert
+    np.testing.assert_almost_equal(result, expected_result, decimal=6)
+
+
+  def test_method_gauss_newton_singular(self):
+    """
+    Test the __gn method
+    """
+    # Arrange
+    la = self.local_approach
+    expected_result = None
+
+    # Act
+    result = la._LocalApproach__gn(self.delta_d, self.J)
+
+    # Assert
+    self.assertEqual(result, expected_result)
+
+  # def test_method_gauss_newton(self):
+  #   """
+  #   Test the __lm method
+  #   """
+  #   # Arrange
+  #   la = self.local_approach
+  #   expected_result = np.array([6.4771924, 6.4771924, 5.0269973])
+
+  #   # Act
+  #   result = la._LocalApproach__gn(self.delta_d, self.J)
+
+  #   # Assert
+  #   np.testing.assert_almost_equal(result, expected_result, decimal=6)
+
 
 
   def test_rmse(self):
@@ -236,7 +281,7 @@ class TestLocalApproachFunctions(unittest.TestCase):
     Test the __rmse method to ensure it calculates the Root Mean Square Error correctly.
     Ensures that the RMSE value computed matches the expected result.
     """
-    delta_d = np.array([1.0, 1.0, 1.0])
+    delta_d = self.delta_d
     rmse = self.local_approach._LocalApproach__rmse(delta_d)
     expected_rmse = np.sqrt(np.sum(delta_d**2) / len(delta_d))
     self.assertAlmostEqual(rmse, expected_rmse, places=5)
@@ -249,7 +294,7 @@ class TestLocalApproachFunctions(unittest.TestCase):
     """
     self.local_approach._LocalApproach__h_list = np.array([0.1])  # Mengubah h_list agar tidak sesuai
     with self.assertRaises(ValueError):
-        self.local_approach._LocalApproach__jacobian()
+        self.local_approach._LocalApproach__jacobian(self.params)
   
 
 if __name__ == '__main__':
