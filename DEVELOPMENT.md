@@ -1,12 +1,5 @@
 # How to Make Virtul Environment
-# Choose Project Layout
-# Setup Metadata
-# Setup Documentation Builder
-# Version Control on Git and Github
-# How to Start Local Development
-# Release The Package to PyPi or Conda
-# How to start virtual environment
-
+## 1. How to start virtual environment
 If you are using PowerShell windows, you might get error like this
 ```powershell
 C:\Users\{your-user}\{your-package}>\env\Scripts\Activate.ps1 cannot be loaded because running scripts is disabled on 
@@ -25,3 +18,10 @@ finally, you can use usual comman to activate your virtual environment
 ```powershell
 C:\Users\{your-user}\{your-package}>\env\Scripts\Activate.ps1
 ```
+
+# Choose Project Layout
+# Setup Metadata
+# Setup Documentation Builder
+# Version Control on Git and Github
+# How to Start Local Development
+# Release The Package to PyPi or Conda
