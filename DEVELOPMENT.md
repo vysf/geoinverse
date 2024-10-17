@@ -50,6 +50,48 @@ deactivate
 You can remove the virtual environment by simply deleting the folder of your virtual environment
 
 # Choose Project Layout
+There are two project layout that we know that commonly use to develop a python package: `src` and `flat` layout. <br>
+recomended src folder layout looks like this:
+```
+myPackageRepoName
+├── CHANGELOG.md               ┐
+├── CODE_OF_CONDUCT.md         │
+├── CONTRIBUTING.md            │
+├── docs                       │ 
+│   └── index.md               │ Package documentation
+│   └── ...                    │
+├── LICENSE                    │
+├── README.md                  ┘
+├── pyproject.toml             ] Package metadata and build configuration
+├── src                        ┐
+│   └── myPackage              │
+│       ├── __init__.py        │ Package source code
+│       ├── moduleA.py         │
+│       └── moduleB.py         ┘
+└── tests                      ┐
+   └── ...                     ┘ Package tests
+```
+recomended flat folder layout looks like this:
+```
+myPackage/
+├── CHANGELOG.md             ┐
+├── CODE_OF_CONDUCT.md       │
+├── CONTRIBUTING.md          │
+├── docs/                    │ Package documentation
+│   └── ...                  │
+├── LICENSE                  │
+├── README.md                ┘
+├── pyproject.toml           ] Package metadata and build configuration
+├── myPackage/               ┐
+│     ├── __init__.py        │ Package source code
+│     ├── moduleA.py         │
+│     └── moduleB.py         ┘
+├── tests/                   ┐
+      ├── test-file1.py      | Package tests
+      └── ....               ┘
+```
+in this project, we are using `src` layout.
+
 # Setup Metadata
 # Setup Documentation Builder
 # Version Control on Git and Github
