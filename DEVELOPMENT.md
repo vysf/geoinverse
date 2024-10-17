@@ -94,6 +94,40 @@ in this project, we are using `src` layout.
 
 # Setup Metadata
 # Setup Documentation Builder
+## 1. Install Sphinx
+Because this project use pyproject.toml, then use thid following command:
+```bash
+pip install .[docs]
+```
+After installation, check Sphinx by running this following command
+```bash
+sphinx-build --version
+```
+if the intallation is success, the command should print out the Sphinx version number
+
+## 2. Setting up the documentation sources
+Create the document layout using the following command
+```bash
+sphinx-quickstart docs
+```
+this will generate `docs` folder with the following content
+```
+docs
+├── build
+├── make.bat
+├── Makefile
+└── source
+   ├── conf.py
+   ├── index.rst
+   ├── _static
+   └── _templates
+```
+To render the documentation as HTML, use the following command
+```bash
+sphinx-build -M html docs/source/ docs/build/
+```
+then access `docs/build/html/index.html` in the browser
+
 # Version Control on Git and Github
 # How to Start Local Development
 # Release The Package to PyPi or Conda
