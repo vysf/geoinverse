@@ -40,6 +40,11 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 finally, you can use the command above to activate your virtual environment
 
+if still get an error, try this command
+```bash
+python -m pip list
+```
+
 ## 3. Deactivate the virtual environment
 After develompent or if you want to change to another virtual environment, than you should deactivate the current virtual environment by using the following command:
 ```bash
