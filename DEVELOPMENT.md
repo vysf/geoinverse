@@ -40,9 +40,10 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 finally, you can use the command above to activate your virtual environment
 
-if still get an error, try this command
+if still get an error, all command start with `python -m {command}`
 ```bash
 python -m pip list
+python -m pip linstal .[test,dev]
 ```
 
 ## 3. Deactivate the virtual environment
