@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "geoinvers"
+name = "geoinverse"
 version = "0.0.0b1"
 
 description = "A simple package for geophysical inversion in python"
@@ -51,4 +51,4 @@ dev = [
 ]
 
 [project.urls]
-Source = "https://github.com/vysf/geoinvers"
+Source = "https://github.com/vysf/geoinverse"
