@@ -182,11 +182,11 @@ class LocalApproach:
 		Parameters
 		----------
 		method : str, optional
-				Optimization method to be used ('lm', 'gn', 'gs', 'qn', 'svd'). Default is 'lm'.
-				1. Levemberg-Marquardt Method (lm)
-				2. Gauss-Newton Method (gn)
-				3. Gradient Method (gs)
-				4. Quasi-Newton Method (qn)
+				Optimization method to be used ('lm', 'gn', 'gs', 'qn', 'svd'). Default is 'lm'. \n
+				1. Levemberg-Marquardt Method (lm) \n
+				2. Gauss-Newton Method (gn) \n
+				3. Gradient Method (gs) \n
+				4. Quasi-Newton Method (qn) \n
 				5. Singular Value Decomposition Method (svd)
 		damping : float, optional
 				Damping factor for the optimization method  (lm, gs, svd). Default is 0.01.
