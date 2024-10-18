@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'GeoInvers'
+project = 'GeoInverse'
 copyright = '2024, Yusuf Umar Al Hakim'
 author = 'Yusuf Umar Al Hakim'
 release = '0.0.0b1'
