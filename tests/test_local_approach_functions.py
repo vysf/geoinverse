@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from geoinvers import LocalApproach
+from geoinverse import LocalApproach
 
 class TestLocalApproachFunctions(unittest.TestCase):
   def setUp(self):

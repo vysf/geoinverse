@@ -132,6 +132,8 @@ To render the documentation as HTML, use the following command
 ```bash
 sphinx-build -M html docs/source/ docs/build/
 ```
+run the command above every time you change `conf.py` or updating the documentation
+
 then access `docs/build/html/index.html` in the browser
 
 # Version Control on Git and Github
